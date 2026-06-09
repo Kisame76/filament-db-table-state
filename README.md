@@ -1,5 +1,5 @@
 <a href="https://github.com/Kisame76/filament-db-table-state" class="filament-hidden">
-    <img src="https://repository-images.githubusercontent.com/1263977432/bad461ab-462b-47f4-a2d8-75a5a59662c3" alt="Filament DB Table State" style="width: 100%; max-width: 100%;" class="filament-hidden">
+    <img src="https://repository-images.githubusercontent.com/1263977432/2540bf07-5b4a-4a93-b3ee-d46745564623" alt="Filament DB Table State" style="width: 100%; max-width: 100%;" class="filament-hidden">
 </a>
 
 # Filament DB Table State
