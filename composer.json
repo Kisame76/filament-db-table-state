@@ -1,0 +1,64 @@
+{
+    "name": "kisame76/filament-db-table-state",
+    "description": "Persist Filament table state (filters, sort, search, column order & visibility) per user in the database, across devices and sessions.",
+    "keywords": [
+        "filament",
+        "laravel",
+        "livewire",
+        "tables",
+        "filters",
+        "persistence"
+    ],
+    "homepage": "https://github.com/Kisame76/filament-db-table-state",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Kiyan Doguc",
+            "email": "k.doguc@kisame-labs.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "filament/filament": "^4.0|^5.0",
+        "illuminate/contracts": "^11.0|^12.0|^13.0",
+        "livewire/livewire": "^3.5|^4.0",
+        "spatie/laravel-package-tools": "^1.16"
+    },
+    "require-dev": {
+        "larastan/larastan": "^2.9|^3.0",
+        "laravel/pint": "^1.0",
+        "orchestra/testbench": "^9.0|^10.0",
+        "pestphp/pest": "^3.0|^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Kisame76\\FilamentDbTableState\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Kisame76\\FilamentDbTableState\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest",
+        "test-coverage": "vendor/bin/pest --coverage",
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=1G",
+        "format": "vendor/bin/pint"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Kisame76\\FilamentDbTableState\\FilamentDbTableStateServiceProvider"
+            ]
+        }
+    },
+    "prefer-stable": true
+}

@@ -1,0 +1,18 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 5
+
+    paths:
+        - src
+
+    tmpDir: build/phpstan
+
+    ignoreErrors:
+        # larastan mis-infers Eloquent `first()` as non-null here. The user's
+        # state row may not exist yet (proven by the snapshot/seed tests), so the
+        # nullsafe operator is required for correctness.
+        -
+            identifier: nullsafe.neverNull
+            path: src/Support/TableStatePersister.php
