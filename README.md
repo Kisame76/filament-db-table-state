@@ -22,7 +22,7 @@ Filament writes table state to the session (when the `->persist*InSession()` fla
 1. **Seeds** the session from the user's saved DB row on component boot — _before_ Filament's `bootedInteractsWithTable()` reads it.
 2. **Snapshots** the session back to the DB at the end of the request — _after_ Filament has written the latest state.
 
-It reuses Filament's own session keys (`getTableFiltersSessionKey()`, `getTableSortSessionKey()`, `getTableColumnsSessionKey()`, …), so it stays compatible with how Filament stores state. Each table gets its own small row per user, holding just that table's state.
+It reuses Filament's own session keys (`getTableFiltersSessionKey()`, `getTableSortSessionKey()`, `getTableColumnsSessionKey()`, …), so it stays compatible with how Filament stores state. Each table gets its own small row per user — keyed by the table's Livewire component class (e.g. `App\Filament\Resources\Users\Pages\ListUsers`), so rows are easy to identify in the database — holding just that table's state.
 
 ## Requirements
 
@@ -198,7 +198,16 @@ Set `enabled => false` to switch the whole package off — no hook, no mirroring
 
 ## Notes & caveats
 
-- Each table has its own small row per user (keyed by user and table), so reads and writes only ever touch that one table's state.
+- Each table has its own small row per user (keyed by user and the table's Livewire component class), so reads and writes only ever touch that one table's state.
+- On panels using tenancy, Filament hashes the filters session key per tenant — those keys land in the same per-table row and are restored per tenant; nothing extra to configure.
+- **Defaults of newly added filters don't reach users with saved state.** Filament only applies filter defaults (`->default()`) when _no_ stored filter state exists for the table: `bootedInteractsWithTable()` fills the filter form straight from the stored array, missing filters become inactive, and that inactive value is immediately persisted back. This is core Filament session behavior — the DB mirror just makes it survive session expiry. After deploying a new filter that has a default, clear the affected rows:
+
+  ```sql
+  DELETE FROM table_states WHERE table_key = 'App\Filament\Resources\Users\Pages\ListUsers';
+  ```
+
+  Note that the default still only applies once the user gets a **fresh session** (logout/login or session expiry): a live session still holds the old filter state, Filament keeps reading it from there, and the next request mirrors it right back into the database.
+
 - Persistence is **fail-safe**: any error while reading/writing state is swallowed so it can never break a page.
 - Two browser tabs editing the same table can race on the last write; the most recent request wins.
 

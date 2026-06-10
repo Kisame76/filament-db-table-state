@@ -11,11 +11,20 @@ namespace Kisame76\FilamentDbTableState\Tests\Support;
  */
 class FakeTableComponent
 {
-    public function __construct(private string $hash = 'abc123') {}
+    /**
+     * $filtersHash mirrors Filament's tenant scoping: the filters key hashes
+     * md5(class|tenant) while every other key hashes md5(class) only.
+     */
+    public function __construct(
+        private string $hash = 'abc123',
+        private ?string $filtersHash = null,
+    ) {}
 
     public function getTableFiltersSessionKey(): string
     {
-        return "tables.{$this->hash}_filters";
+        $hash = $this->filtersHash ?? $this->hash;
+
+        return "tables.{$hash}_filters";
     }
 
     public function getTableSortSessionKey(): string

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Kisame76\FilamentDbTableState\Models\TableState;
 use Kisame76\FilamentDbTableState\Support\TableStatePersister;
 use Kisame76\FilamentDbTableState\Tests\Support\FakeTableComponent;
+use Kisame76\FilamentDbTableState\Tests\Support\OtherFakeTableComponent;
 
 beforeEach(function (): void {
     TableStatePersister::resolveUserIdUsing(fn () => 7);
@@ -24,6 +25,7 @@ it('snapshots session state into the database', function (): void {
     $row = TableState::query()->where('user_id', 7)->first();
 
     expect($row)->not->toBeNull()
+        ->and($row->table_key)->toBe(FakeTableComponent::class)
         ->and($row->state['tables.abc_filters'])->toBe(['status' => 'open'])
         ->and($row->state['tables.abc_sort'])->toBe('created_at:desc');
 });
@@ -31,7 +33,7 @@ it('snapshots session state into the database', function (): void {
 it('seeds the session from the database', function (): void {
     TableState::create([
         'user_id' => 7,
-        'table_key' => 'tables.abc',
+        'table_key' => FakeTableComponent::class,
         'state' => ['tables.abc_filters' => ['status' => 'closed']],
     ]);
 
@@ -45,7 +47,7 @@ it('seeds the session from the database', function (): void {
 it('does not overwrite existing session values when seeding', function (): void {
     TableState::create([
         'user_id' => 7,
-        'table_key' => 'tables.abc',
+        'table_key' => FakeTableComponent::class,
         'state' => ['tables.abc_filters' => ['status' => 'closed']],
     ]);
 
@@ -61,12 +63,12 @@ it('stores each table in its own row', function (): void {
     persister()->snapshot(new FakeTableComponent('abc'));
 
     session()->put('tables.xyz_filters', ['z' => 3]);
-    persister()->snapshot(new FakeTableComponent('xyz'));
+    persister()->snapshot(new OtherFakeTableComponent('xyz'));
 
     expect(TableState::query()->where('user_id', 7)->count())->toBe(2)
-        ->and(TableState::query()->where('table_key', 'tables.abc')->first()->state)
+        ->and(TableState::query()->where('table_key', FakeTableComponent::class)->first()->state)
         ->toBe(['tables.abc_filters' => ['y' => 2]])
-        ->and(TableState::query()->where('table_key', 'tables.xyz')->first()->state)
+        ->and(TableState::query()->where('table_key', OtherFakeTableComponent::class)->first()->state)
         ->toBe(['tables.xyz_filters' => ['z' => 3]]);
 });
 
@@ -88,6 +90,38 @@ it('keeps a single row per user per table when snapshotting repeatedly', functio
     persister()->snapshot(new FakeTableComponent('abc'));
 
     expect(TableState::query()->where('user_id', 7)->count())->toBe(1);
+});
+
+it('keeps tenant-scoped filter keys in the same table row', function (): void {
+    // Under multi-tenancy Filament hashes the filters session key per tenant,
+    // so its prefix differs from every other key of the same table.
+    session()->put('tables.abc|17_filters', ['project_id' => 5]);
+    session()->put('tables.abc_columns', ['name']);
+
+    persister()->snapshot(new FakeTableComponent('abc', filtersHash: 'abc|17'));
+
+    $rows = TableState::query()->where('user_id', 7)->get();
+
+    expect($rows)->toHaveCount(1)
+        ->and($rows->first()->table_key)->toBe(FakeTableComponent::class)
+        ->and($rows->first()->state)->toHaveKeys(['tables.abc|17_filters', 'tables.abc_columns']);
+});
+
+it('keeps one row per table across tenants and seeds only the active tenant', function (): void {
+    session()->put('tables.abc|17_filters', ['project_id' => 5]);
+    persister()->snapshot(new FakeTableComponent('abc', filtersHash: 'abc|17'));
+
+    session()->put('tables.abc|3_filters', ['project_id' => 9]);
+    persister()->snapshot(new FakeTableComponent('abc', filtersHash: 'abc|3'));
+
+    expect(TableState::query()->where('user_id', 7)->count())->toBe(1);
+
+    session()->flush();
+
+    persister()->seed(new FakeTableComponent('abc', filtersHash: 'abc|3'));
+
+    expect(session()->get('tables.abc|3_filters'))->toBe(['project_id' => 9])
+        ->and(session()->has('tables.abc|17_filters'))->toBeFalse();
 });
 
 it('is a no-op for guests', function (): void {
@@ -115,7 +149,7 @@ it('does not seed when disabled', function (): void {
 
     TableState::create([
         'user_id' => 7,
-        'table_key' => 'tables.abc',
+        'table_key' => FakeTableComponent::class,
         'state' => ['tables.abc_filters' => ['status' => 'closed']],
     ]);
 

@@ -41,7 +41,7 @@ it('seeds correctly with a custom user_column', function (): void {
 
     DB::table(config('db-table-state.table'))->insert([
         'member_id' => 7,
-        'table_key' => 'tables.abc',
+        'table_key' => FakeTableComponent::class,
         'state' => json_encode(['tables.abc_filters' => ['status' => 'closed']]),
     ]);
 

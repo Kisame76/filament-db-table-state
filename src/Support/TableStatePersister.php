@@ -25,8 +25,9 @@ class TableStatePersister
 {
     /**
      * Session-key resolver methods exposed by Filament's InteractsWithTable.
-     * Each returns the unique (per Livewire component + tenant) session key for
-     * one slice of table state.
+     * Each returns the unique session key for one slice of table state. The
+     * filters key is additionally scoped per tenant (md5(class|tenant)) while
+     * all other keys hash the component class only.
      *
      * @var list<string>
      */
@@ -94,7 +95,8 @@ class TableStatePersister
 
     /**
      * Persist the current session state for this table into the user's row,
-     * merging with any state from other tables. Only writes when changed.
+     * merging with previously saved state (e.g. other tenants' filter keys).
+     * Only writes when changed.
      */
     public function snapshot(object $component): void
     {
@@ -182,13 +184,14 @@ class TableStatePersister
     }
 
     /**
-     * Derive the shared table identifier from the component. Every session key
-     * for a table shares the same `tables.<hash>` prefix, so we strip the
-     * filters suffix to get a stable per-table key.
+     * Stable per-table identifier: the Livewire component class hosting the
+     * table. Session-key prefixes are unusable here — Filament hashes the
+     * filters key per tenant but every other key per class, so under
+     * multi-tenancy no single prefix identifies the table.
      */
     protected function tableKey(object $component): string
     {
-        return (string) preg_replace('/_filters$/', '', $component->getTableFiltersSessionKey());
+        return $component::class;
     }
 
     protected function userColumn(): string
