@@ -2,7 +2,11 @@
 
 All notable changes to `filament-db-table-state` will be documented in this file.
 
-## 1.0.1 - 2026-06-10
+## 1.0.2 - 2026-06-17
+
+### Fixed
+
+- Clearing a slice of table state is now persisted. Resetting a sort back to default (Filament stores `null` under the sort session key, and Laravel's `session()->has()` reports `false` for `null`) meant `snapshot()` never saw the change, while its `array_merge` could only add or overwrite — never remove. The previously saved sort lingered in the database and was re-seeded on the next request, so sorting could not be cleared. `snapshot()` now removes any managed key that is absent or `null` in the session, while leaving keys it does not manage (e.g. another tenant's filters) untouched. The same fix applies to clearing filters, search and per-page.
 
 ### Fixed
 

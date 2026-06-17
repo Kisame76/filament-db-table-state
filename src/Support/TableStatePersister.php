@@ -94,9 +94,18 @@ class TableStatePersister
     }
 
     /**
-     * Persist the current session state for this table into the user's row,
-     * merging with previously saved state (e.g. other tenants' filter keys).
-     * Only writes when changed.
+     * Persist the current session state for this table into the user's row.
+     *
+     * For each session key this table manages we either write the current
+     * session value or, when the user has cleared that slice, remove it from
+     * the stored state. Keys this table does NOT manage (e.g. another tenant's
+     * filters) are left untouched. Only writes when the result actually changed.
+     *
+     * Removal is essential: when a user resets sorting back to default, Filament
+     * stores null under the sort session key, and Laravel's session()->has()
+     * reports false for null. A plain array_merge can only add or overwrite, so
+     * the previously saved sort would otherwise linger forever and be re-seeded
+     * on the next request – making it impossible to clear sorting.
      */
     public function snapshot(object $component): void
     {
@@ -111,21 +120,19 @@ class TableStatePersister
                 return;
             }
 
-            $current = [];
+            $tableKey = $this->tableKey($component);
+            $existing = $this->record($userId, $tableKey)?->state ?? [];
+            $merged = $existing;
 
             foreach ($this->sessionKeys($component) as $key) {
                 if (session()->has($key)) {
-                    $current[$key] = session()->get($key);
+                    $merged[$key] = session()->get($key);
+                } else {
+                    // Cleared or never set (null counts as cleared) – drop it so
+                    // the default state is restored on the next request.
+                    unset($merged[$key]);
                 }
             }
-
-            if ($current === []) {
-                return;
-            }
-
-            $tableKey = $this->tableKey($component);
-            $existing = $this->record($userId, $tableKey)?->state ?? [];
-            $merged = array_merge($existing, $current);
 
             if ($merged == $existing) {
                 return;
