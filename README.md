@@ -27,7 +27,7 @@ It reuses Filament's own session keys (`getTableFiltersSessionKey()`, `getTableS
 ## Requirements
 
 - PHP 8.2+
-- Filament v4 or v5
+- Filament v4.3+ or v5
 - Livewire v3.5+ / v4
 
 ## Installation
@@ -210,6 +210,10 @@ Set `enabled => false` to switch the whole package off — no hook, no mirroring
 
 - Persistence is **fail-safe**: any error while reading/writing state is swallowed so it can never break a page.
 - Two browser tabs editing the same table can race on the last write; the most recent request wins.
+
+## Security
+
+Security reports go to the address in [SECURITY.md](SECURITY.md), never to the issue tracker.
 
 ## License
 

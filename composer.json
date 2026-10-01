@@ -11,6 +11,11 @@
     ],
     "homepage": "https://github.com/Kisame76/filament-db-table-state",
     "license": "MIT",
+    "support": {
+        "issues": "https://github.com/Kisame76/filament-db-table-state/issues",
+        "source": "https://github.com/Kisame76/filament-db-table-state",
+        "security": "https://github.com/Kisame76/filament-db-table-state/blob/main/SECURITY.md"
+    },
     "authors": [
         {
             "name": "Kiyan Doguc",
@@ -20,7 +25,7 @@
     ],
     "require": {
         "php": "^8.2",
-        "filament/filament": "^4.0|^5.0",
+        "filament/filament": "^4.3|^5.0",
         "illuminate/contracts": "^11.0|^12.0|^13.0",
         "livewire/livewire": "^3.5|^4.0",
         "spatie/laravel-package-tools": "^1.16"
@@ -28,7 +33,7 @@
     "require-dev": {
         "larastan/larastan": "^2.9|^3.0",
         "laravel/pint": "^1.0",
-        "orchestra/testbench": "^9.0|^10.0",
+        "orchestra/testbench": "^9.0|^10.0|^11.0",
         "pestphp/pest": "^3.0|^4.0"
     },
     "autoload": {

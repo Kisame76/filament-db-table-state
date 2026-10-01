@@ -11,3 +11,4 @@
 /phpstan.neon       export-ignore
 /.editorconfig      export-ignore
 /CHANGELOG.md       export-ignore
+/SECURITY.md        export-ignore
