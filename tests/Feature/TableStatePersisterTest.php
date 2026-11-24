@@ -209,3 +209,34 @@ it('does not seed when disabled', function (): void {
 
     expect(session()->has('tables.abc_filters'))->toBeFalse();
 });
+
+it('falls back to seeding stored keys when session key resolvers throw before table boot', function (): void {
+    $component = new class
+    {
+        public function getTableFiltersSessionKey(): string
+        {
+            throw new Error('Typed property::$table must not be accessed before initialization');
+        }
+
+        public function getTableColumnsSessionKey(): string
+        {
+            throw new Error('Typed property::$table must not be accessed before initialization');
+        }
+    };
+
+    TableState::create([
+        'user_id' => 7,
+        'table_key' => $component::class,
+        'state' => [
+            'filament.tables.abc.filters' => ['status' => 'open'],
+            'filament.tables.abc.columns' => [['name' => 'cups', 'isToggled' => true]],
+        ],
+    ]);
+
+    session()->put('filament.tables.abc.filters', ['status' => 'live']);
+
+    persister()->seed($component);
+
+    expect(session()->get('filament.tables.abc.filters'))->toBe(['status' => 'live'])
+        ->and(session()->get('filament.tables.abc.columns'))->toBe([['name' => 'cups', 'isToggled' => true]]);
+});

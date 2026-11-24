@@ -20,7 +20,10 @@ it('persists a table that opted into nothing when auto_enable_persistence is on'
 
     $state = TableState::query()->where('user_id', $user->id)->sole()->state;
 
-    expect(collect($state)->keys()->implode(' '))->toContain('_search')->toContain('_sort');
+    $keys = collect($state)->keys();
+
+    expect($keys->contains(fn (string $key): bool => (bool) preg_match('/[._]search$/', $key)))->toBeTrue()
+        ->and($keys->contains(fn (string $key): bool => (bool) preg_match('/[._]sort$/', $key)))->toBeTrue();
 
     session()->flush();
 

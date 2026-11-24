@@ -19,5 +19,5 @@ it('leaves a table that opted into nothing alone while auto_enable_persistence i
     // for the package to mirror. Column layout is the one slice Filament keeps by default.
     $keys = TableState::query()->get()->flatMap(fn ($row) => array_keys($row->state ?? []));
 
-    expect($keys->filter(fn ($key) => str_ends_with($key, '_search') || str_ends_with($key, '_sort')))->toBeEmpty();
+    expect($keys->filter(fn (string $key): bool => (bool) preg_match('/[._](search|sort)$/', $key)))->toBeEmpty();
 });

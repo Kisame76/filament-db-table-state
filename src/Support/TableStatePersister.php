@@ -83,7 +83,22 @@ class TableStatePersister
                 return;
             }
 
-            foreach ($this->sessionKeys($component) as $key) {
+            $keys = $this->sessionKeys($component);
+
+            if ($keys === []) {
+                // In Filament 5, getTable*SessionKey() accesses $this->getTable(), which is not
+                // initialized yet during Livewire's boot() hook. Fall back to seeding the keys
+                // already stored under this component's table_key without overwriting live session data.
+                foreach ($stored as $key => $value) {
+                    if ($key !== '' && ! session()->has($key)) {
+                        session()->put($key, $value);
+                    }
+                }
+
+                return;
+            }
+
+            foreach ($keys as $key) {
                 if (array_key_exists($key, $stored) && ! session()->has($key)) {
                     session()->put($key, $stored[$key]);
                 }
