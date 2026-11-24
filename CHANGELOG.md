@@ -2,6 +2,13 @@
 
 All notable changes to `filament-db-table-state` will be documented in this file.
 
+## 1.0.4 - 2026-11-24
+
+### Fixed
+
+- Saved table state is restored again on current Filament releases (4.17 and 5.x). Their `getTable*SessionKey()` methods now go through `getTable()`, which is not initialized yet when Livewire's `boot()` hook runs, so every key failed to resolve and `seed()` restored nothing; the following snapshot then overwrote the saved row with the defaults. When no key resolves, `seed()` now puts the keys stored for this component into the session, still without overwriting anything already there. Thanks to @underdpt (#4).
+- The integration tests accept both session-key formats (`_search` in Filament 4, `.search` in Filament 5).
+
 ## 1.0.3 - 2026-10-01
 
 ### Changed
