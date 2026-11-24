@@ -34,12 +34,13 @@ it('mirrors search, sort and filters from a real table into one row', function (
 
     $row = TableState::query()->where('user_id', $this->user->id)->sole();
 
+    $keys = collect($row->state)->keys();
+
     expect($row->table_key)->toBe(PersistingThingsTable::class)
-        ->and(collect($row->state)->keys()->implode(' '))
-        ->toContain('_search')
-        ->toContain('_sort')
-        ->toContain('_filters')
-        ->and(collect($row->state)->filter(fn ($value, $key) => str_ends_with($key, '_search'))->first())
+        ->and($keys->contains(fn (string $key): bool => (bool) preg_match('/[._]search$/', $key)))->toBeTrue()
+        ->and($keys->contains(fn (string $key): bool => (bool) preg_match('/[._]sort$/', $key)))->toBeTrue()
+        ->and($keys->contains(fn (string $key): bool => (bool) preg_match('/[._]filters$/', $key)))->toBeTrue()
+        ->and(collect($row->state)->filter(fn ($value, $key) => (bool) preg_match('/[._]search$/', $key))->first())
         ->toBe('Alp');
 });
 
@@ -81,7 +82,7 @@ it('does not hand one user\'s state to another', function (): void {
     // Visiting a table writes that user's own row, with an empty search in it. What matters
     // is that none of Ada's search came across.
     $searches = TableState::query()->where('user_id', $someoneElse->id)->get()
-        ->flatMap(fn ($row) => collect($row->state ?? [])->filter(fn ($value, $key) => str_ends_with($key, '_search')));
+        ->flatMap(fn ($row) => collect($row->state ?? [])->filter(fn ($value, $key) => (bool) preg_match('/[._]search$/', $key)));
 
     expect($searches->filter(fn ($value) => filled($value)))->toBeEmpty();
 });
