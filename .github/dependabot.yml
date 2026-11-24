@@ -14,6 +14,11 @@ updates:
     cooldown:
       default-days: 7
     open-pull-requests-limit: 5
+    # Pest 5 needs PHP ^8.4 and symfony/process ^8.1, so it cannot install on the PHP 8.2/8.3
+    # and Laravel 11/12 this package still supports. Drop this once those are gone.
+    ignore:
+      - dependency-name: "pestphp/pest"
+        versions: [">=5"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
